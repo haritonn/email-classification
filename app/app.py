@@ -1,8 +1,9 @@
-from flask import Flask, url_for, request, session, render_template
+from flask import Flask, url_for, request, session, render_template, redirect
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import psycopg2
-import os 
+import os
+import pickle 
 from dotenv import load_dotenv
 
 from initdb import close_db, init_db, get_db
@@ -14,13 +15,26 @@ POSTGRES_USER = os.getenv('POSTGRES_USER')
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
-app = Flask(__name__, template_folder='templates/', static_folder='static/')
+app = Flask(__name__, template_folder='templates', static_folder='static')
 app.teardown_appcontext(close_db)
+app.secret_key = os.getenv('FLASK_SECKEY')
+
 
 @app.cli.command('init-db')
 def init_db_command():
     init_db()
     print("DB init successfully")
+
+@app.before_request
+def check_status():
+    allowed_routes = ['register', 'login']
+    if 'user_id' not in session and request.endpoint not in allowed_routes:
+        return redirect(url_for('login'))
+
+
+@app.route('/')
+def index():
+    ...
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -38,6 +52,7 @@ def register():
             error = "This user already logged"
 
         if error is None:
+            session['user_id'] = username
             return render_template('index.html')
         return render_template('register.html', error=error)
 

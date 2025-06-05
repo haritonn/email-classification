@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Предсказание</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <h2>Спам или не спам?</h2>
+    <form action="{{url_for('index')}}" method="post">
+        <label for="prompt">Введите тело сообщения:</label>
+        <input type="text" name="prompt" id="prompt" required><br><br>
+    </form>
+    {%if prediction_false%}
+    <p style="color:aquamarine">Не спам</p>
+    {% endif %}
+
+    {%if prediction_true%}
+    <p style="color:red">Спам</p>
+    {% endif %}
+
+</body>
+</html>
