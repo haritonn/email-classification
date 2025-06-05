@@ -22,8 +22,8 @@ def init_db():
             )
         with conn.cursor() as cur:
             cur.execute(
-                """CREATE TABLE IF NOT EXISTS user (
-                id INTEGER PRIMARY KEY SERIAL,
+                """CREATE TABLE IF NOT EXISTS "user" (
+                id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL
                 );

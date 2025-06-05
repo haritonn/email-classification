@@ -22,6 +22,26 @@ def init_db_command():
     init_db()
     print("DB init successfully")
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        error = None
+
+        conn = get_db()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("INSERT INTO user (username, password) VALUES (?, ?)", (username, password))
+        except psycopg2.errors.UniqueViolation:
+            error = "This user already logged"
+
+        if error is None:
+            return render_template('index.html')
+        return render_template('register.html', error=error)
+
+    return render_template('register.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -31,13 +51,7 @@ def login():
         error = None
 
         try:
-            conn = psycopg2.connect(
-                dbname=POSTGRES_DB,
-                user=POSTGRES_USER,
-                password=POSTGRES_PASSWORD,
-                host='localhost',
-                port=POSTGRES_PORT
-            )
+            conn = get_db()
             with conn.cursor() as cur:
                 cur.execute("SELECT username, password WHERE username = %s", (username, ))
                 user = cur.fetchone()
