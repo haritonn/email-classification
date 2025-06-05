@@ -32,7 +32,8 @@ def register():
         conn = get_db()
         try:
             with conn.cursor() as cur:
-                cur.execute("INSERT INTO user (username, password) VALUES (?, ?)", (username, password))
+                cur.execute("""INSERT INTO "user" (username, password) VALUES (%s, %s)""", (username, password))
+                conn.commit()
         except psycopg2.errors.UniqueViolation:
             error = "This user already logged"
 
@@ -53,12 +54,14 @@ def login():
         try:
             conn = get_db()
             with conn.cursor() as cur:
-                cur.execute("SELECT username, password WHERE username = %s", (username, ))
+                cur.execute("""SELECT username, password FROM "user" WHERE username = %s""", (username, ))
                 user = cur.fetchone()
         except psycopg2.errors.OperationalError:
             error = 'Some error has occured with DataBase. Make sure you init db'
         
         error = None
+        if user is None:
+            return render_template('login.html', error='This user doesnt exist...')
         db_user, db_pass = user
         if db_user is None:
             error = 'User not found in database'
@@ -71,3 +74,7 @@ def login():
         return render_template('index.html')
     
     return render_template('login.html')
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port='5000', debug=True)
