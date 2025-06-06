@@ -32,9 +32,35 @@ def check_status():
         return redirect(url_for('login'))
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    ...
+    if request.method=='POST':
+        mail_text = request.form['prompt']
+        error = None 
+
+        if not mail_text:
+            error = "Введите текст"
+        
+        if error is not None:
+            return render_template('index.html', error = error)
+
+        with open('pickles/pipeline.pkl', 'rb') as f:
+            pipe = pickle.load(f)
+
+        mail_tf = pipe.fit([mail_text])
+        y_pred_true = (pipe.predict([mail_tf]) == 0).astype(int)
+        y_pred_false = (pipe.predict([mail_tf]) == 1).astype(int)
+
+        y_proba = pipe.predict_proba([mail_tf])
+
+        if y_pred_true == 1:
+            return render_template('index.html', prediction_false=y_pred_true, not_spam_proba=y_proba)
+        
+        return render_template('index.html', prediction_true=y_pred_false, spam_proba=y_proba)
+    
+    return render_template('index.html')
+
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -49,7 +75,7 @@ def register():
         conn = get_db()
         try:
             with conn.cursor() as cur:
-                cur.execute("""INSERT INTO "user" (username, password) VALUES (%s, %s)""", (username, password))
+                cur.execute("""INSERT INTO "user" (username, password) VALUES (%s, %s)""", (username, generate_password_hash(password)))
                 conn.commit()
         except psycopg2.errors.UniqueViolation:
             error = "Этот пользователь уже зарегестрирован"
