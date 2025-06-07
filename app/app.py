@@ -1,4 +1,4 @@
-from flask import Flask, url_for, request, session, render_template, redirect
+from flask import Flask, url_for, request, session, render_template, redirect, g
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import psycopg2
@@ -7,6 +7,7 @@ import pickle
 from dotenv import load_dotenv
 
 from initdb import close_db, init_db, get_db
+from initml import init_model
 
 load_dotenv()
 
@@ -27,14 +28,38 @@ def init_db_command():
 
 @app.before_request
 def check_status():
-    allowed_routes = ['register', 'login']
+    allowed_routes = ['register', 'login', 'static']
     if 'user_id' not in session and request.endpoint not in allowed_routes:
         return redirect(url_for('login'))
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    ...
+    if request.method=='POST':
+        mail_text = request.form['prompt']
+        error = None 
+
+        if not mail_text:
+            error = "Введите текст"
+        
+        if error is not None:
+            return render_template('index.html', error = error)
+
+        init_model()
+
+        y_pred_false = (g.pipeline.predict([mail_text]) == 0).astype(int)
+        y_pred_true = (g.pipeline.predict([mail_text]) == 1).astype(int)
+
+        y_proba = g.pipeline.predict_proba([mail_text])
+
+        if y_pred_false == 1:
+            return render_template('index.html', prediction_false=y_pred_false, not_spam_proba=y_proba)
+        
+        return render_template('index.html', prediction_true=y_pred_true, spam_proba=y_proba)
+    
+    return render_template('index.html')
+
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -45,11 +70,12 @@ def register():
 
         if password != request.form['confirm_password']:
             error = 'Пароли не совпадают'
+            return render_template("register.html")
 
         conn = get_db()
         try:
             with conn.cursor() as cur:
-                cur.execute("""INSERT INTO "user" (username, password) VALUES (%s, %s)""", (username, password))
+                cur.execute("""INSERT INTO "user" (username, password) VALUES (%s, %s)""", (username, generate_password_hash(password)))
                 conn.commit()
         except psycopg2.errors.UniqueViolation:
             error = "Этот пользователь уже зарегестрирован"
