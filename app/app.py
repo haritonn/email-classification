@@ -5,6 +5,7 @@ import psycopg2
 import os
 import pickle 
 from dotenv import load_dotenv
+import numpy as np
 
 from initdb import close_db, init_db, get_db
 from initml import init_model
@@ -50,12 +51,12 @@ def index():
         y_pred_false = (g.pipeline.predict([mail_text]) == 0).astype(int)
         y_pred_true = (g.pipeline.predict([mail_text]) == 1).astype(int)
 
-        y_proba = g.pipeline.predict_proba([mail_text])
+        y_proba = np.round(g.pipeline.predict_proba([mail_text]), 2)*100
 
         if y_pred_false == 1:
-            return render_template('index.html', prediction_false=y_pred_false, not_spam_proba=y_proba)
+            return render_template('index.html', prompt = mail_text, prediction_false=y_pred_false, not_spam_proba=y_proba[0][0])
         
-        return render_template('index.html', prediction_true=y_pred_true, spam_proba=y_proba)
+        return render_template('index.html', prompt = mail_text, prediction_true=y_pred_true, not_spam_proba=y_proba[0][1])
     
     return render_template('index.html')
 

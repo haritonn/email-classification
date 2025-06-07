@@ -13,11 +13,13 @@
         <input type="text" name="prompt" id="prompt" required><br><br>
     </form>
     {%if prediction_false%}
-    <p style="color:aquamarine">Не спам</p>
+        <p style="color:aquamarine">Не спам</p><br><br>
+        <p style="color:greenyellow">Вероятность того, что это не спам: {{not_spam_proba}}</p>
     {% endif %}
 
     {%if prediction_true%}
-    <p style="color:red">Спам</p>
+        <p style="color:red">Спам</p><br><br>
+        <p style="color:greenyellow">Вероятность того, что это спам: {{not_spam_proba}}</p>
     {% endif %}
 
 </body>
