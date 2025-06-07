@@ -10,6 +10,7 @@ POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_USER = os.getenv('POSTGRES_USER')
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+POSTGRES_HOST = os.getenv('POSTGRES_HOST')
 
 def get_db():
     if 'db' not in g:
@@ -17,7 +18,7 @@ def get_db():
             dbname=POSTGRES_DB,
             user=POSTGRES_USER,
             password=POSTGRES_PASSWORD,
-            host='localhost',
+            host=POSTGRES_HOST,
             port=POSTGRES_PORT
         )
         
