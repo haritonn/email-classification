@@ -3,6 +3,6 @@
 
 ## TODO
 - [ ] Docker;
-- [ ] ML;
+- [x] simple ml;
 - [x] Визуал (CSS);
 - [ ] Более развёрнутый ReadMe.
