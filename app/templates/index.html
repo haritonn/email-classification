@@ -10,7 +10,7 @@
     <h2>Спам или не спам?</h2>
     <form action="{{url_for('index')}}" method="post">
         <label for="prompt">Введите тело сообщения:</label>
-        <input type="text" name="prompt" id="prompt" required><br><br>
+        <input type="text" name="prompt" id="prompt" required>Прошлый запрос: {{prompt}}<br><br>
     </form>
     {%if prediction_false%}
         <p style="color:aquamarine">Не спам</p><br><br>
