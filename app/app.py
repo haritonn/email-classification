@@ -1,12 +1,14 @@
-from flask import Flask, url_for, request, session, render_template, redirect
+from flask import Flask, url_for, request, session, render_template, redirect, g
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import psycopg2
 import os
 import pickle 
 from dotenv import load_dotenv
+import numpy as np
 
 from initdb import close_db, init_db, get_db
+from initml import init_model
 
 load_dotenv()
 
@@ -27,7 +29,7 @@ def init_db_command():
 
 @app.before_request
 def check_status():
-    allowed_routes = ['register', 'login']
+    allowed_routes = ['register', 'login', 'static']
     if 'user_id' not in session and request.endpoint not in allowed_routes:
         return redirect(url_for('login'))
 
@@ -44,19 +46,17 @@ def index():
         if error is not None:
             return render_template('index.html', error = error)
 
-        with open('pickles/pipeline.pkl', 'rb') as f:
-            pipe = pickle.load(f)
+        init_model()
 
-        mail_tf = pipe.fit([mail_text])
-        y_pred_true = (pipe.predict([mail_tf]) == 0).astype(int)
-        y_pred_false = (pipe.predict([mail_tf]) == 1).astype(int)
+        y_pred_false = (g.pipeline.predict([mail_text]) == 0).astype(int)
+        y_pred_true = (g.pipeline.predict([mail_text]) == 1).astype(int)
 
-        y_proba = pipe.predict_proba([mail_tf])
+        y_proba = np.round(g.pipeline.predict_proba([mail_text]), 2)*100
 
-        if y_pred_true == 1:
-            return render_template('index.html', prediction_false=y_pred_true, not_spam_proba=y_proba)
+        if y_pred_false == 1:
+            return render_template('index.html', prompt = mail_text, prediction_false=y_pred_false, not_spam_proba=y_proba[0][0])
         
-        return render_template('index.html', prediction_true=y_pred_false, spam_proba=y_proba)
+        return render_template('index.html', prompt = mail_text, prediction_true=y_pred_true, not_spam_proba=y_proba[0][1])
     
     return render_template('index.html')
 
@@ -71,6 +71,7 @@ def register():
 
         if password != request.form['confirm_password']:
             error = 'Пароли не совпадают'
+            return render_template("register.html")
 
         conn = get_db()
         try:

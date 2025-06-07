@@ -10,26 +10,16 @@
     <h2>Спам или не спам?</h2>
     <form action="{{url_for('index')}}" method="post">
         <label for="prompt">Введите тело сообщения:</label>
-        <input type="text" name="prompt" id="prompt" required><br><br>
-        <button type="submit">Сделать предсказание</button>
-
+        <input type="text" name="prompt" id="prompt" required>Прошлый запрос: {{prompt}}<br><br>
     </form>
-    {% if prediction_false %}
-        <p style="color:aquamarine">
-            Не спам
-            {% if not_spam_proba is defined %}
-                (вероятность: {{ not_spam_proba | round(2) }})
-            {% endif %}
-        </p>
+    {%if prediction_false%}
+        <p style="color:aquamarine">Не спам</p><br><br>
+        <p style="color:greenyellow">Вероятность того, что это не спам: {{not_spam_proba}}</p>
     {% endif %}
 
-    {% if prediction_true %}
-        <p style="color:red">
-            Спам
-            {% if spam_proba is defined %}
-                (вероятность: {{ spam_proba | round(2) }})
-            {% endif %}
-        </p>
+    {%if prediction_true%}
+        <p style="color:red">Спам</p><br><br>
+        <p style="color:greenyellow">Вероятность того, что это спам: {{not_spam_proba}}</p>
     {% endif %}
 
 </body>
