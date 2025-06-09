@@ -110,7 +110,7 @@ def login():
         db_user, db_pass = user
         if db_user is None:
             error = 'Пользователь не найден'
-        elif not check_password_hash(password, db_pass):
+        elif not check_password_hash(db_pass, password):
             error = 'Некорректный пароль'
         
         if error is not None:
